@@ -2,12 +2,12 @@ export const COLOR = {
   O: {
     text: "text-rose-500",
     border: "border-rose-500",
-    bg: "bg-rose-500/20",
+    bg: "bg-rose-500",
   },
   X: {
     text: "text-blue-500",
     border: "border-blue-500",
-    bg: "bg-blue-500/20",
+    bg: "bg-blue-500",
   },
 };
 

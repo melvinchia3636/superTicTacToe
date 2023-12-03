@@ -1,7 +1,11 @@
 import Cell from "./cell";
 import Board from "./board";
 import { COLOR, ICON } from "./constants";
-import drawLine from "./utils";
+import drawLine, {
+  checkDiagonal,
+  checkHorizontal,
+  checkVertical,
+} from "./utils";
 
 export default class MasterCell {
   public parent: Board;
@@ -51,10 +55,10 @@ export default class MasterCell {
     this.element.appendChild(this.cover);
   }
 
-  checkWin() {
-    const horizontalWin = this.checkHorizontal();
-    const verticalWin = this.checkVertical();
-    const diagonalWin = this.checkDiagonal();
+  checkWin(): boolean {
+    const horizontalWin = checkHorizontal(this);
+    const verticalWin = checkVertical(this);
+    const diagonalWin = checkDiagonal(this);
 
     let winner = horizontalWin.winner
       ? horizontalWin
@@ -68,102 +72,12 @@ export default class MasterCell {
       this.value = winner.winner as "X" | "O";
       drawLine(winner.firstCell!, winner.lastCell!, this.element, 4);
       this.putBigValue();
-      this.parent.checkWin();
-    }
-  }
+      const isFinalWin = this.parent.checkWin();
 
-  checkHorizontal(): {
-    winner: "X" | "O" | false;
-    firstCell: Cell | null;
-    lastCell: Cell | null;
-  } {
-    for (let i = 0; i < 3; i++) {
-      const first = this.cells[i][0].value;
-      if (!first) continue;
-
-      for (let j = 0; j < 3; j++) {
-        if (this.cells[i][j].value !== first) break;
-        if (j === 2)
-          return {
-            winner: first,
-            firstCell: this.cells[i][0],
-            lastCell: this.cells[i][2],
-          };
-      }
+      return isFinalWin;
     }
 
-    return {
-      winner: false,
-      firstCell: null,
-      lastCell: null,
-    };
-  }
-
-  checkVertical(): {
-    winner: "X" | "O" | false;
-    firstCell: Cell | null;
-    lastCell: Cell | null;
-  } {
-    for (let i = 0; i < 3; i++) {
-      const first = this.cells[0][i].value;
-      if (!first) continue;
-
-      for (let j = 0; j < 3; j++) {
-        if (this.cells[j][i].value !== first) break;
-        if (j === 2)
-          return {
-            winner: first,
-            firstCell: this.cells[0][i],
-            lastCell: this.cells[2][i],
-          };
-      }
-    }
-
-    return {
-      winner: false,
-      firstCell: null,
-      lastCell: null,
-    };
-  }
-
-  checkDiagonal(): {
-    winner: "X" | "O" | false;
-    firstCell: Cell | null;
-    lastCell: Cell | null;
-  } {
-    const first = this.cells[0][0].value;
-    if (first) {
-      if (
-        this.cells[1][1].value === first &&
-        this.cells[2][2].value === first
-      ) {
-        return {
-          winner: first,
-          firstCell: this.cells[0][0],
-          lastCell: this.cells[2][2],
-        };
-      }
-    }
-
-    const second = this.cells[0][2].value;
-    if (second) {
-      if (
-        this.cells[1][1].value === second &&
-        this.cells[2][0].value === second
-      ) {
-        return {
-          winner: second,
-          firstCell: this.cells[0][2],
-          lastCell: this.cells[2][0],
-        };
-      }
-    }
-
-    return {
-      winner: false,
-      firstCell: null,
-      lastCell: null,
-    };
+    return false;
   }
 
   putBigValue() {
@@ -183,6 +97,7 @@ export default class MasterCell {
       "justify-center",
       "items-center",
       "z-20",
+      "bg-opacity-20",
       COLOR[this.value!].bg,
       COLOR[this.value!].text
     );
@@ -199,5 +114,13 @@ export default class MasterCell {
   enable() {
     this.element.style.pointerEvents = "auto";
     this.cover.style.display = "none";
+  }
+
+  reset() {
+    this.value = null;
+    this.element.innerHTML = "";
+    this.cells.forEach((row) => row.forEach((cell) => cell.reset()));
+
+    this.initElement();
   }
 }

@@ -1,7 +1,13 @@
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono&family=Space+Grotesk:wght@300;400;500;600&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 * {
+  font-family: "Space Grotesk", sans-serif;
+}
+
+#board * {
   font-family: "JetBrains Mono", monospace;
 }

@@ -1,4 +1,5 @@
 import Cell from "./cell";
+import { COLOR, ICON } from "./constants";
 import MasterCell from "./masterCell";
 import drawLine, {
   checkDiagonal,
@@ -8,12 +9,25 @@ import drawLine, {
 
 export default class Board {
   public element: HTMLDivElement;
+  private currentPlayerIndicator: HTMLSpanElement;
+  private endGameScreen: HTMLDivElement;
+  private resetButton: HTMLButtonElement;
+
   public cells: Array<Array<MasterCell>>;
   public currentTurn: "X" | "O";
   public lastPlacedCell: Cell | null = null;
 
-  constructor(boardElement: HTMLDivElement) {
+  constructor(
+    boardElement: HTMLDivElement,
+    currentPlayerIndicator: HTMLSpanElement,
+    endGameScreen: HTMLDivElement,
+    resetButton: HTMLButtonElement
+  ) {
     this.element = boardElement;
+    this.currentPlayerIndicator = currentPlayerIndicator;
+    this.endGameScreen = endGameScreen;
+    this.resetButton = resetButton;
+
     this.currentTurn = "X";
 
     this.cells = Array<Array<MasterCell>>();
@@ -29,10 +43,17 @@ export default class Board {
 
   initElement() {
     this.element.classList.add("grid", "grid-cols-3", "grid-rows-3");
+    this.endGameScreen.classList.remove("flex");
+    this.endGameScreen.classList.add("hidden");
+    this.updatePlayerIndicator();
+
+    this.resetButton.addEventListener("click", this.reset.bind(this));
   }
 
   switchTurn() {
     this.currentTurn = this.currentTurn === "X" ? "O" : "X";
+    this.updatePlayerIndicator();
+
     if (this.lastPlacedCell) {
       if (
         this.cells[this.lastPlacedCell.coordinates.x][
@@ -46,16 +67,21 @@ export default class Board {
       }
 
       for (let i = 0; i < 3; i++) {
-        for (let j = 0; j < 3; j++) this.cells[i][j].disable();
+        for (let j = 0; j < 3; j++) {
+          if (
+            i === this.lastPlacedCell.coordinates.x &&
+            j === this.lastPlacedCell.coordinates.y
+          ) {
+            this.cells[i][j].enable();
+            continue;
+          }
+          this.cells[i][j].disable();
+        }
       }
-
-      this.cells[this.lastPlacedCell.coordinates.x][
-        this.lastPlacedCell.coordinates.y
-      ].enable();
     }
   }
 
-  checkWin() {
+  checkWin(): boolean {
     const horizontalWin = checkHorizontal(this);
     const verticalWin = checkVertical(this);
     const diagonalWin = checkDiagonal(this);
@@ -74,14 +100,55 @@ export default class Board {
       for (let i = 0; i < 3; i++) {
         for (let j = 0; j < 3; j++) this.cells[i][j].enable();
       }
+
+      this.showEndGameScreen(winner.winner as "X" | "O");
     }
+
+    return Boolean(winner);
   }
 
-  disable() {
-    this.element.style.pointerEvents = "none";
+  updatePlayerIndicator() {
+    this.currentPlayerIndicator.classList.remove(
+      "text-blue-500",
+      "text-rose-500"
+    );
+
+    this.currentPlayerIndicator.classList.add(COLOR[this.currentTurn].text);
+
+    this.currentPlayerIndicator.innerHTML = ICON[this.currentTurn];
   }
 
-  enable() {
-    this.element.style.pointerEvents = "auto";
+  showEndGameScreen(winner: "X" | "O") {
+    const winnerIndicator = this.endGameScreen.querySelector("#winner");
+    const resetButton = this.endGameScreen.querySelector(
+      "#restart-button"
+    ) as HTMLDivElement;
+
+    this.endGameScreen.classList.remove(COLOR.O.bg, COLOR.X.bg);
+    this.endGameScreen.classList.add(COLOR[winner].bg);
+
+    this.endGameScreen.classList.remove("hidden");
+    this.endGameScreen.classList.add("flex");
+
+    winnerIndicator!.innerHTML = ICON[winner];
+
+    resetButton.addEventListener("click", () => {
+      this.endGameScreen.classList.remove("flex");
+      this.endGameScreen.classList.add("hidden");
+      this.reset();
+    });
+
+    resetButton.classList.remove(COLOR.O.text, COLOR.X.text);
+    resetButton.classList.add(COLOR[winner].text);
+  }
+
+  reset() {
+    this.lastPlacedCell = null;
+    this.currentTurn = "X";
+    this.element.innerHTML = "";
+    this.updatePlayerIndicator();
+    this.cells.forEach((row) => row.forEach((cell) => cell.reset()));
+
+    this.initElement();
   }
 }

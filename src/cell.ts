@@ -45,7 +45,17 @@ export default class Cell {
     this.value = this.parent.parent.currentTurn;
     this.parent.parent.lastPlacedCell = this;
     this.updateElement();
-    this.parent.parent.switchTurn();
-    this.parent.checkWin();
+    const isFinalWin = this.parent.checkWin();
+    if (!isFinalWin) {
+      this.parent.parent.switchTurn();
+    }
+  }
+
+  reset() {
+    this.value = null;
+    this.element.innerHTML = "";
+    this.element.classList.remove(COLOR.O.text, COLOR.X.text);
+
+    this.initElement();
   }
 }
