@@ -58,7 +58,10 @@ export default class Board {
       if (
         this.cells[this.lastPlacedCell.coordinates.x][
           this.lastPlacedCell.coordinates.y
-        ].value
+        ].value ||
+        this.cells[this.lastPlacedCell.coordinates.x][
+          this.lastPlacedCell.coordinates.y
+        ].cells.every((row) => row.every((cell) => cell.value))
       ) {
         for (let i = 0; i < 3; i++) {
           for (let j = 0; j < 3; j++) this.cells[i][j].enable();
